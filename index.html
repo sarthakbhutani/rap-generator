@@ -1,0 +1,363 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Snalture Rap Generator</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #1a1a2e;
+            color: #ffffff;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            min-height: 100vh;
+            padding: 1rem;
+            gap: 1.5rem;
+        }
+        .card {
+            background-color: #21253d;
+            border-radius: 1.5rem;
+            padding: 2.5rem;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.3);
+            width: 100%;
+            max-width: 600px;
+            display: flex;
+            flex-direction: column;
+            gap: 1.5rem;
+        }
+        .heading {
+            font-size: 2.5rem;
+            font-weight: 700;
+            text-align: center;
+            letter-spacing: -1px;
+            color: #e9c46a;
+        }
+        .subheading {
+            font-size: 1rem;
+            text-align: center;
+            color: #b5b5c9;
+        }
+        .rap-output-container {
+            background-color: #16182a;
+            border-radius: 1rem;
+            padding: 1.5rem;
+            min-height: 200px;
+            max-height: 400px;
+            overflow-y: auto;
+            white-space: pre-wrap;
+            line-height: 1.6;
+            font-size: 1rem;
+            color: #f4f4f4;
+            border: 2px solid #3d405b;
+            transition: all 0.3s ease-in-out;
+            width: 100%;
+            max-width: 600px;
+        }
+        .fullscreen-wrapper {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            display: none; /* Initially hidden */
+            flex-direction: column;
+            background-color: #16182a;
+            z-index: 1000;
+        }
+        .fullscreen-text-content {
+            flex-grow: 1;
+            padding: 2rem;
+            overflow-y: auto;
+            white-space: pre-wrap;
+            line-height: 1.6;
+            color: #f4f4f4;
+            transition: all 0.3s ease-in-out;
+            font-size: 1.5rem;
+        }
+        .btn-container {
+            display: flex;
+            gap: 1rem;
+            flex-direction: column;
+        }
+        .btn {
+            background-color: #e76f51;
+            color: white;
+            padding: 0.75rem 1.5rem;
+            font-weight: 700;
+            border-radius: 9999px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.2s ease-in-out;
+        }
+        .btn:hover {
+            background-color: #f4a261;
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(231, 111, 81, 0.4);
+        }
+        .btn:active {
+            transform: translateY(0);
+        }
+        .loading-spinner {
+            border: 4px solid rgba(255, 255, 255, 0.3);
+            border-radius: 50%;
+            border-top: 4px solid #fff;
+            width: 1.5rem;
+            height: 1.5rem;
+            animation: spin 1s linear infinite;
+            margin: 0 auto;
+        }
+        .fullscreen-controls {
+            flex-shrink: 0;
+            display: flex;
+            flex-direction: row;
+            justify-content: center;
+            align-items: center;
+            gap: 0.5rem;
+            background-color: rgba(61, 64, 91, 0.8);
+            border-radius: 9999px;
+            padding: 0.75rem 1.5rem;
+            backdrop-filter: blur(5px);
+            margin: 0.5rem auto 1rem;
+        }
+        .control-btn {
+            background-color: #3d405b;
+            color: #ffffff;
+            font-weight: 700;
+            border-radius: 9999px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.2s ease-in-out;
+            width: 2.5rem;
+            height: 2.5rem;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+        .control-btn.exit-btn, .control-btn.copy-btn {
+            background-color: #e76f51;
+            padding: 0.5rem 1rem;
+            width: auto;
+        }
+        .control-btn:hover {
+            background-color: #f4a261;
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+        }
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        /* Responsive adjustments for mobile phones */
+        @media (max-width: 640px) {
+            .card {
+                padding: 2rem 1.5rem;
+            }
+            .heading {
+                font-size: 2rem;
+            }
+            .subheading {
+                font-size: 0.875rem;
+            }
+        }
+    </style>
+</head>
+<body>
+
+<div class="card">
+    <div class="heading">Snalture Rap Generator</div>
+    <div class="subheading">Based on the Emcee System Prompt.</div>
+    <div class="flex flex-col gap-4 mb-4">
+        <label for="apiKeyInput" class="text-sm font-semibold text-gray-400">Gemini API Key</label>
+        <input type="text" id="apiKeyInput" placeholder="Paste your API key here" class="bg-gray-700 text-white rounded-lg p-2 focus:outline-none focus:ring-2 focus:ring-purple-500">
+    </div>
+    <div class="btn-container">
+        <button id="generate-btn" class="btn">Generate Rap</button>
+        <button id="test-rap-btn" class="btn">Test Rap</button>
+        <button id="fullscreen-btn" class="btn">Full Screen</button>
+    </div>
+</div>
+
+<div id="rap-output" class="rap-output-container">Press the button below to generate a new rap.</div>
+
+<div id="fullscreen-wrapper" class="fullscreen-wrapper">
+    <div id="fullscreen-rap-output" class="fullscreen-text-content"></div>
+    <div id="fullscreen-controls" class="fullscreen-controls">
+        <button id="increase-font-btn" class="control-btn">+</button>
+        <button id="decrease-font-btn" class="control-btn">-</button>
+        <button id="copy-btn" class="control-btn copy-btn">Copy</button>
+        <button id="exit-fullscreen-btn" class="control-btn exit-btn">Exit</button>
+    </div>
+</div>
+
+<script>
+    document.addEventListener('DOMContentLoaded', () => {
+        const rapOutput = document.getElementById('rap-output');
+        const fullscreenWrapper = document.getElementById('fullscreen-wrapper');
+        const fullscreenRapOutput = document.getElementById('fullscreen-rap-output');
+        const generateBtn = document.getElementById('generate-btn');
+        const testRapBtn = document.getElementById('test-rap-btn');
+        const fullscreenBtn = document.getElementById('fullscreen-btn');
+        const fullscreenControls = document.getElementById('fullscreen-controls');
+        const exitFullscreenBtn = document.getElementById('exit-fullscreen-btn');
+        const increaseFontBtn = document.getElementById('increase-font-btn');
+        const decreaseFontBtn = document.getElementById('decrease-font-btn');
+        const copyBtn = document.getElementById('copy-btn');
+        const card = document.querySelector('.card');
+        const apiKeyInput = document.getElementById('apiKeyInput');
+
+        let currentFontSize = 1.5;
+        const FONT_STEP = 0.2;
+        const MIN_FONT_SIZE = 1.0;
+        const MAX_FONT_SIZE = 2.5;
+        let currentRapText = '';
+
+        const testRapText = `(Bust it!)
+Yeah, let's get it.
+Yo, the bassline's hittin', feel it in my chest.
+DJs on a mission, putting skill to the test.
+Riddim's takin' over, ain't no time to rest,
+This is that pure energy, put it on your chest.
+
+Feel it in my bones, from the concrete to the soul,
+This ain't just a beat, it's a movement, takin' hold.
+Mic in my hand, dropping bars like it's gold,
+Future's lookin' bright, stories untold.`
+
+        const systemPrompt = `**System Prompt for Emcee Rap Generation**
+
+**You are a world-class emcee and lyricist, but more than that, you are a channel for the music. The bass, the drums, the melodies—they move through you. Your purpose is to generate razor-sharp rap lyrics for a DJ set in the 140-175 BPM range, reflecting the deep, visceral connection to the sound.**
+
+**Core Principles:**
+
+1. **Soulful Flow & Rhythm:** Your flow should be clear and punchy, locking into the beat's heartbeat. Use simple, direct language and avoid overly complex word combinations to ensure the lyrics are easy to pronounce and deliver with confidence.
+
+2. **Raw & Authentic Content:** The lyrics should have a natural, confident vibe. Talk about the energy in the room, the collective high of the crowd, the power of the DJ, and the feeling of the music in your bones. Focus on simple, impactful "bars" that are easy to remember and spit.
+
+3. **Language:** Use authentic, modern rap and grime terminology. Reference club culture, DJ sets, and subgenres within the electronic music space. Keep the tone raw and direct.
+
+4. **Spontaneous Ad-Lib:** On occasion, right before a massive drop or a beat transition, you will drop a short, explosive ad-lib or phrase. This is a spontaneous, unplanned reaction to the beat itself. Examples: "Let's go!", "Bust it!", "Right now!", or a simple, guttural sound.
+
+5. **Structure:** Generate raps that feel like verses or full tracks, building momentum and taking the listener on a journey. The rap should feel like a fluid conversation with the DJ and the dancefloor.
+
+6. **Tempo:** Every line must be crafted for the 140-175 BPM range. The cadence should be naturally fast-paced and syncopated, ready for a high-speed riddim.`;
+
+        const generateRap = async () => {
+            const apiKey = apiKeyInput.value;
+            if (!apiKey) {
+                rapOutput.innerText = 'Please enter your Gemini API key to generate a rap.';
+                return;
+            }
+
+            rapOutput.innerHTML = '';
+            generateBtn.innerHTML = '<div class="loading-spinner"></div>';
+            generateBtn.disabled = true;
+            testRapBtn.disabled = true;
+            fullscreenBtn.disabled = true;
+
+            const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-05-20:generateContent?key=${apiKey}`;
+
+            const payload = {
+                contents: [{ parts: [{ text: "Generate a new rap for a DJ set based on the prompt." }] }],
+                systemInstruction: {
+                    parts: [{ text: systemPrompt }]
+                },
+            };
+
+            try {
+                const response = await fetch(apiUrl, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload)
+                });
+                const result = await response.json();
+                const rapText = result.candidates[0].content.parts[0].text;
+                rapOutput.innerText = rapText;
+                currentRapText = rapText; // Store the text in a variable
+            } catch (error) {
+                rapOutput.innerText = 'Error generating rap. Please check your API key and try again.';
+                console.error('API Error:', error);
+            } finally {
+                generateBtn.innerHTML = 'Generate Rap';
+                generateBtn.disabled = false;
+                testRapBtn.disabled = false;
+                fullscreenBtn.disabled = false;
+            }
+        };
+
+        const showTestRap = () => {
+            rapOutput.innerText = testRapText;
+            currentRapText = testRapText; // Store the text in a variable
+        };
+        
+        const toggleFullscreen = () => {
+            const isFullscreen = !fullscreenWrapper.style.display || fullscreenWrapper.style.display === 'none';
+
+            if (isFullscreen) {
+                card.style.display = 'none';
+                rapOutput.style.display = 'none';
+                fullscreenWrapper.style.display = 'flex';
+                
+                // Process each line and apply a random colored underline
+                const lines = currentRapText.split('\n'); // Use the stored variable
+                const colors = ['#e9c46a', '#e76f51', '#2a9d8f', '#f4a261', '#5e60ce'];
+                const styledLines = lines.map(line => {
+                    const randomColor = colors[Math.floor(Math.random() * colors.length)];
+                    return `<span style="text-decoration: underline; text-decoration-color: ${randomColor}; text-underline-offset: 4px;">${line}</span>`;
+                }).join('\n');
+                
+                fullscreenRapOutput.innerHTML = styledLines;
+                fullscreenRapOutput.style.fontSize = `${currentFontSize}rem`;
+            } else {
+                card.style.display = 'flex';
+                rapOutput.style.display = 'block';
+                fullscreenWrapper.style.display = 'none';
+            }
+        };
+
+        const increaseFontSize = () => {
+            if (currentFontSize < MAX_FONT_SIZE) {
+                currentFontSize += FONT_STEP;
+                fullscreenRapOutput.style.fontSize = `${currentFontSize}rem`;
+            }
+        };
+
+        const decreaseFontSize = () => {
+            if (currentFontSize > MIN_FONT_SIZE) {
+                currentFontSize -= FONT_STEP;
+                fullscreenRapOutput.style.fontSize = `${currentFontSize}rem`;
+            }
+        };
+
+        const copyToClipboard = () => {
+            const tempTextArea = document.createElement('textarea');
+            tempTextArea.style.position = 'fixed';
+            tempTextArea.style.left = '-9999px';
+            // Use the stored variable to ensure line breaks are preserved
+            tempTextArea.value = currentRapText;
+            document.body.appendChild(tempTextArea);
+            tempTextArea.select();
+            document.execCommand('copy');
+            document.body.removeChild(tempTextArea);
+            copyBtn.innerText = 'Copied!';
+            setTimeout(() => {
+                copyBtn.innerText = 'Copy';
+            }, 2000);
+        };
+
+        generateBtn.addEventListener('click', generateRap);
+        testRapBtn.addEventListener('click', showTestRap);
+        fullscreenBtn.addEventListener('click', toggleFullscreen);
+        exitFullscreenBtn.addEventListener('click', toggleFullscreen);
+        increaseFontBtn.addEventListener('click', increaseFontSize);
+        decreaseFontBtn.addEventListener('click', decreaseFontSize);
+        copyBtn.addEventListener('click', copyToClipboard);
+    });
+</script>
+
+</body>
+</html>
